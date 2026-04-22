@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(DESIGNER)
+  avatar    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  briefsRequested Brief[]        @relation("Requester")
+  briefsAssigned  Brief[]        @relation("Assignee")
+  versions        Version[]
+  comments        Comment[]
+  notifications   Notification[]
+}
+
+enum Role {
+  REQUESTER
+  DESIGNER
+  ADMIN
+}
+
+model Brief {
+  id          String      @id @default(cuid())
+  title       String
+  channel     String
+  audience    String?
+  product     String?
+  specs       String
+  priority    Priority    @default(MEDIUM)
+  deadline    DateTime?
+  description String
+  status      BriefStatus @default(PENDING)
+
+  requesterId String
+  requester   User   @relation("Requester", fields: [requesterId], references: [id])
+  assigneeId  String?
+  assignee    User?  @relation("Assignee", fields: [assigneeId], references: [id])
+
+  versions   Version[]
+  references ReferenceImage[]
+
+  finalVersionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([requesterId])
+  @@index([assigneeId])
+}
+
+enum BriefStatus {
+  PENDING
+  IN_PROGRESS
+  REVIEWING
+  REVISING
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Version {
+  id        String @id @default(cuid())
+  briefId   String
+  brief     Brief  @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  versionNo Int
+
+  uploaderId String
+  uploader   User   @relation(fields: [uploaderId], references: [id])
+
+  images   Image[]
+  comments Comment[]
+  status   VersionStatus @default(PENDING_REVIEW)
+
+  basedOnVersionId String?
+  note             String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([briefId, versionNo])
+  @@index([briefId])
+}
+
+enum VersionStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ADOPTED
+}
+
+model Image {
+  id            String  @id @default(cuid())
+  versionId     String
+  version       Version @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  filename      String
+  originalName  String
+  filePath      String
+  thumbnailPath String
+  previewPath   String
+
+  mimeType String
+  size     Int
+  width    Int
+  height   Int
+
+  isArchived Boolean @default(false)
+  tags       Tag[]
+
+  createdAt DateTime @default(now())
+
+  @@index([versionId])
+  @@index([isArchived])
+}
+
+model Comment {
+  id        String      @id @default(cuid())
+  versionId String
+  version   Version     @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User        @relation(fields: [authorId], references: [id])
+  content   String
+  type      CommentType @default(GENERAL)
+
+  imageId String?
+  pinX    Float?
+  pinY    Float?
+
+  createdAt DateTime @default(now())
+
+  @@index([versionId])
+}
+
+enum CommentType {
+  GENERAL
+  FEEDBACK
+  APPROVAL
+}
+
+model Tag {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  images Image[]
+}
+
+model ReferenceImage {
+  id            String @id @default(cuid())
+  briefId       String
+  brief         Brief  @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  filePath      String
+  thumbnailPath String
+  originalName  String
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id      String  @id @default(cuid())
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type    String
+  title   String
+  content String
+  link    String?
+  read    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}

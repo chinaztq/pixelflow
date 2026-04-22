@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
+/* PixelFlow — Claude-inspired Design Tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Backgrounds */
+  --background: #f5f4ed;
+  --card: #faf9f5;
+  --card-white: #ffffff;
+
+  /* Borders */
+  --border: #f0eee6;
+  --border-warm: #e8e6dc;
+  --border-hover: #d1cfc5;
+
+  /* Text */
+  --text: #141413;
+  --text-muted: #5e5d59;
+  --text-subtle: #87867f;
+
+  /* Brand */
+  --accent: #c96442;
+  --accent-hover: #b55a3a;
+  --accent-text: #faf9f5;
+
+  /* Semantic */
+  --success: #3a6b44;
+  --success-bg: #f0f7f1;
+  --warning: #92680f;
+  --warning-bg: #fdf8ed;
+  --error: #b53333;
+  --error-bg: #fdf1f1;
+
+  /* Interactive */
+  --hover-bg: rgba(20, 20, 19, 0.04);
+  --focus: #3898ec;
+
+  /* Shadows */
+  --shadow-ring: 0px 0px 0px 1px #d1cfc5;
+  --shadow-ring-accent: 0px 0px 0px 1px #c96442;
+  --shadow-whisper: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --shadow-float: rgba(0, 0, 0, 0.08) 0px 8px 32px;
+
+  --radius: 8px;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-foreground: var(--text);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  font-family: "Inter", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1cfc5; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #b0aea5; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid #3898ec;
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(201, 100, 66, 0.15);
 }
