@@ -20,16 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const parsed = schema.safeParse(body);
   const assigneeId = parsed.success && parsed.data.assigneeId
     ? parsed.data.assigneeId
-    : session.user.role === "DESIGNER"
-    ? session.user.id
-    : null;
-
-  if (session.user.role === "DESIGNER" && assigneeId !== session.user.id) {
-    return buildApiError("FORBIDDEN", "只能接派给自己的单", 403);
-  }
-  if (session.user.role === "REQUESTER" && !assigneeId) {
-    return buildApiError("VALIDATION_ERROR", "请指定设计师", 400);
-  }
+    : session.user.id;
 
   const updated = await prisma.brief.update({
     where: { id },

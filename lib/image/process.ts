@@ -98,3 +98,64 @@ export async function processAndStoreReference(
 
   return { filePath, thumbnailPath, originalName };
 }
+
+interface ProcessedTemplate {
+  filename: string;
+  originalName: string;
+  filePath: string;
+  thumbnailPath: string;
+  previewPath: string;
+  mimeType: string;
+  size: number;
+  width: number;
+  height: number;
+}
+
+export async function processAndStoreTemplate(
+  buffer: Buffer,
+  originalName: string,
+  mimeType: AllowedMimeType,
+  templateId: string
+): Promise<ProcessedTemplate> {
+  const filename = uuidv4();
+  const ext = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+  const base = `templates/${templateId}`;
+
+  const originalPath = `${base}/original/${filename}.${ext}`;
+  const previewPath = `${base}/preview/${filename}.${ext}`;
+  const thumbnailPath = `${base}/thumbnail/${filename}.${ext}`;
+
+  const image = sharp(buffer);
+  const meta = await image.metadata();
+  const width = meta.width ?? 0;
+  const height = meta.height ?? 0;
+
+  // Original
+  await storage.save(buffer, originalPath, mimeType);
+
+  // Preview (max long-side 1200px)
+  const previewBuf = await image
+    .clone()
+    .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+    .toBuffer();
+  await storage.save(previewBuf, previewPath, mimeType);
+
+  // Thumbnail (max long-side 400px)
+  const thumbBuf = await image
+    .clone()
+    .resize(400, 400, { fit: "inside", withoutEnlargement: true })
+    .toBuffer();
+  await storage.save(thumbBuf, thumbnailPath, mimeType);
+
+  return {
+    filename,
+    originalName,
+    filePath: originalPath,
+    thumbnailPath,
+    previewPath,
+    mimeType,
+    size: buffer.length,
+    width,
+    height,
+  };
+}

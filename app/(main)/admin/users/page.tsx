@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 
 export default async function AdminUsersPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/dashboard");
+  if (!session?.user) redirect("/login");
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },

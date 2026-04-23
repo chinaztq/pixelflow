@@ -20,7 +20,8 @@ export function RelativeTime({
   const [label, setLabel] = useState(() => formatDate(date));
 
   useEffect(() => {
-    setLabel(formatRelativeTime(date));
+    const timer = setTimeout(() => setLabel(formatRelativeTime(date)), 0);
+    return () => clearTimeout(timer);
   }, [date]);
 
   return (

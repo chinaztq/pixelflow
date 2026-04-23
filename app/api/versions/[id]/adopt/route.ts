@@ -15,11 +15,6 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
   });
   if (!version) return buildApiError("NOT_FOUND", "版本不存在", 404);
 
-  const canAdopt =
-    session.user.role === "ADMIN" ||
-    (session.user.role === "REQUESTER" && version.brief.requesterId === session.user.id);
-  if (!canAdopt) return buildApiError("FORBIDDEN", "无权限", 403);
-
   if (!["PENDING_REVIEW", "APPROVED"].includes(version.status)) {
     return buildApiError("INVALID_STATE", "当前状态不可采用", 400);
   }

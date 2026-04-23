@@ -12,11 +12,6 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
   const brief = await prisma.brief.findUnique({ where: { id } });
   if (!brief) return buildApiError("NOT_FOUND", "需求单不存在", 404);
 
-  const canCancel =
-    session.user.role === "ADMIN" ||
-    (session.user.role === "REQUESTER" && brief.requesterId === session.user.id);
-  if (!canCancel) return buildApiError("FORBIDDEN", "无权限", 403);
-
   if (brief.status === "COMPLETED" || brief.status === "CANCELLED") {
     return buildApiError("INVALID_STATE", "当前状态不可取消", 400);
   }

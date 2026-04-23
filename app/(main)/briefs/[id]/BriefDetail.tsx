@@ -4,7 +4,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { toast } from "sonner";
-import { formatDate, formatFileSize } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { RelativeTime } from "@/components/common/RelativeTime";
 import { StatusBadge, PriorityBadge, VersionStatusBadge } from "@/components/common/StatusBadge";
 import { UploadPanel } from "@/components/version/UploadPanel";
@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, Plus, Check, X, Star, MessageSquare } from "lucide-react";
+import { ChevronLeft, Plus, Check, X, Star } from "lucide-react";
+import { canUploadVersion, canAssignBrief } from "@/lib/permissions";
 import type { SessionUser, BriefWithRelations } from "@/types";
 
 interface BriefDetailProps {
@@ -30,7 +31,7 @@ interface BriefDetailProps {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((d) => d.data);
 
-export function BriefDetail({ brief: initialBrief, currentUser, designers }: BriefDetailProps) {
+export function BriefDetail({ brief: initialBrief, currentUser }: BriefDetailProps) {
   const { data: brief, mutate } = useSWR<BriefWithRelations>(
     `/api/briefs/${initialBrief.id}`,
     fetcher,
@@ -46,14 +47,8 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
 
   if (!brief) return null;
 
-  const isRequester = currentUser.role === "REQUESTER" || currentUser.role === "ADMIN";
-  const isDesigner = currentUser.role === "DESIGNER" || currentUser.role === "ADMIN";
-  const canUpload = isDesigner &&
-    brief.assigneeId === currentUser.id &&
-    brief.status !== "COMPLETED" &&
-    brief.status !== "CANCELLED";
-  const canAssign = brief.status === "PENDING" &&
-    (currentUser.role === "DESIGNER" || currentUser.role === "ADMIN");
+  const canUpload = canUploadVersion(currentUser, brief);
+  const canAssign = canAssignBrief(currentUser, brief);
 
   async function handleAssign() {
     setActionLoading(true);
@@ -121,7 +116,7 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
         </Link>
 
         <div
-          className="rounded-[8px] border p-4 space-y-3"
+          className="rounded-[6px] border p-4 space-y-3"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
           <div className="flex items-start justify-between gap-2">
@@ -178,21 +173,21 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
         {/* Reference images */}
         {brief.references.length > 0 && (
           <div
-            className="rounded-[8px] border p-4"
+            className="rounded-[6px] border p-4"
             style={{ background: "var(--card)", borderColor: "var(--border)" }}
           >
             <p className="text-xs font-medium mb-2" style={{ color: "var(--text-muted)" }}>参考图</p>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="flex flex-wrap gap-3">
               {brief.references.map((ref) => (
                 <div
                   key={ref.id}
-                  className="aspect-square rounded-[6px] overflow-hidden bg-[#f5f4ed]"
+                  className="w-[300px] rounded-[6px] overflow-hidden bg-[#f5f4ed]"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`/api/images/${ref.thumbnailPath}?size=thumb`}
                     alt={ref.originalName}
-                    className="w-full h-full object-cover"
+                    className="w-[300px] h-auto block"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 </div>
@@ -227,7 +222,7 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
 
         {brief.versions.length === 0 && (
           <div
-            className="rounded-[8px] border p-8 text-center"
+            className="rounded-[6px] border p-8 text-center"
             style={{ background: "var(--card)", borderColor: "var(--border)" }}
           >
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -237,13 +232,12 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
         )}
 
         {brief.versions.map((version) => {
-          const canReviewThis =
-            isRequester && version.status === "PENDING_REVIEW" && brief.status !== "COMPLETED";
+          const canReviewThis = version.status === "PENDING_REVIEW" && brief.status !== "COMPLETED";
 
           return (
             <div
               key={version.id}
-              className="rounded-[8px] border overflow-hidden"
+              className="rounded-[6px] border overflow-hidden"
               style={{ background: "var(--card)", borderColor: "var(--border)" }}
             >
               {/* Version header */}
@@ -288,18 +282,18 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
 
               {/* Image grid */}
               {version.images.length > 0 && (
-                <div className="p-3 grid grid-cols-4 gap-2">
+                <div className="p-3 flex flex-wrap gap-3">
                   {version.images.map((img, idx) => (
                     <button
                       key={img.id}
-                      className="aspect-square rounded-[6px] overflow-hidden bg-[#f5f4ed] hover:opacity-90 transition-opacity"
+                      className="w-[300px] rounded-[6px] overflow-hidden bg-[#f5f4ed] hover:opacity-90 transition-opacity"
                       onClick={() => setLightbox({ images: version.images, index: idx })}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={`/api/images/${img.thumbnailPath}`}
                         alt={img.originalName}
-                        className="w-full h-full object-cover"
+                        className="w-[300px] h-auto block"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     </button>
@@ -393,7 +387,7 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
 
       {/* Reject dialog */}
       <Dialog open={!!rejectDialog?.open} onOpenChange={() => setRejectDialog(null)}>
-        <DialogContent className="rounded-[8px]" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+        <DialogContent className="rounded-[6px]" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <DialogHeader>
             <DialogTitle className="text-sm font-medium" style={{ color: "var(--text)" }}>
               打回修改
@@ -404,7 +398,7 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="请填写具体的修改意见，帮助设计师改进..."
             rows={4}
-            className="rounded-[8px] text-sm resize-none"
+            className="rounded-[6px] text-sm resize-none"
             style={{ borderColor: "var(--border)", background: "var(--card)", color: "var(--text)" }}
           />
           <DialogFooter>
@@ -422,7 +416,7 @@ export function BriefDetail({ brief: initialBrief, currentUser, designers }: Bri
 
       {/* Adopt dialog */}
       <Dialog open={!!adoptDialog?.open} onOpenChange={() => setAdoptDialog(null)}>
-        <DialogContent className="rounded-[8px]" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+        <DialogContent className="rounded-[6px]" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <DialogHeader>
             <DialogTitle className="text-sm font-medium" style={{ color: "var(--text)" }}>
               采用此版本

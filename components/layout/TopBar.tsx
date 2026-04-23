@@ -146,14 +146,12 @@ export function TopBar({ user, unreadCount = 0 }: TopBarProps) {
                 个人设置
               </Link>
             </DropdownMenuItem>
-            {user.role === "ADMIN" && (
-              <DropdownMenuItem asChild className="rounded-[6px] text-sm cursor-pointer">
-                <Link href="/admin/users" className="flex items-center gap-2" style={{ color: "#5e5d59" }}>
-                  <Settings size={13} strokeWidth={1.5} />
-                  用户管理
-                </Link>
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem asChild className="rounded-[6px] text-sm cursor-pointer">
+              <Link href="/admin/users" className="flex items-center gap-2" style={{ color: "#5e5d59" }}>
+                <Settings size={13} strokeWidth={1.5} />
+                用户管理
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator style={{ background: "#e8e6dc" }} />
             <DropdownMenuItem
               className="rounded-[6px] text-sm cursor-pointer"

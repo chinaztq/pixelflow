@@ -7,10 +7,9 @@ import { BriefForm } from "@/components/brief/BriefForm";
 export default async function NewBriefPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect("/login");
-  if (session.user.role === "DESIGNER") redirect("/briefs");
 
   const designers = await prisma.user.findMany({
-    where: { role: "DESIGNER", active: true },
+    where: { active: true },
     select: { id: true, name: true },
   });
 

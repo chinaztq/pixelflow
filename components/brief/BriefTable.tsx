@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { StatusBadge, PriorityBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/EmptyState";
-import type { Brief, Role } from "@prisma/client";
+import type { Brief } from "@prisma/client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const CHANNELS = ["Facebook", "Instagram", "Google", "TikTok", "其他"];
@@ -37,8 +37,6 @@ interface BriefTableProps {
   total: number;
   page: number;
   pageSize: number;
-  designers: { id: string; name: string }[];
-  role: Role;
   currentFilters: { status?: string; channel?: string; priority?: string };
 }
 
@@ -79,7 +77,6 @@ export function BriefTable({
   total,
   page,
   pageSize,
-  role,
   currentFilters,
 }: BriefTableProps) {
   const router = useRouter();
@@ -179,7 +176,7 @@ export function BriefTable({
                 <PriorityBadge priority={brief.priority} />
               </span>
               <span className="truncate text-xs" style={{ color: "#87867f" }}>
-                {brief.assignee?.name ?? (role === "REQUESTER" ? "未指派" : "—")}
+                {brief.assignee?.name ?? "未指派"}
               </span>
               <span>
                 <StatusBadge status={brief.status} />

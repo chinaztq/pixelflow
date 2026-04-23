@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   FileText,
   Image,
+  Layers,
   Bell,
   Users,
   ChevronLeft,
@@ -14,23 +15,23 @@ import { cn } from "@/lib/utils";
 import type { SessionUser } from "@/types";
 
 interface SidebarProps {
-  user: SessionUser;
   collapsed: boolean;
   onToggle: () => void;
 }
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "仪表盘", icon: LayoutDashboard, roles: ["REQUESTER", "DESIGNER", "ADMIN"] },
-  { href: "/briefs",    label: "需求单",  icon: FileText,         roles: ["REQUESTER", "DESIGNER", "ADMIN"] },
-  { href: "/library",  label: "素材库",  icon: Image,            roles: ["REQUESTER", "DESIGNER", "ADMIN"] },
-  { href: "/notifications", label: "通知", icon: Bell,           roles: ["REQUESTER", "DESIGNER", "ADMIN"] },
-  { href: "/admin/users",   label: "用户管理", icon: Users,      roles: ["ADMIN"] },
+  { href: "/dashboard", label: "仪表盘", icon: LayoutDashboard },
+  { href: "/briefs",    label: "需求单",  icon: FileText },
+  { href: "/library",  label: "素材库",  icon: Image },
+  { href: "/templates", label: "模板库",  icon: Layers },
+  { href: "/notifications", label: "通知", icon: Bell },
+  { href: "/admin/users",   label: "用户管理", icon: Users },
 ];
 
-export function Sidebar({ user, collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
 
-  const items = NAV_ITEMS.filter((item) => item.roles.includes(user.role));
+  const items = NAV_ITEMS;
 
   return (
     <aside

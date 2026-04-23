@@ -18,11 +18,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const brief = await prisma.brief.findUnique({ where: { id } });
   if (!brief) return buildApiError("NOT_FOUND", "需求单不存在", 404);
 
-  const canUpload =
-    session.user.role === "ADMIN" ||
-    (session.user.role === "REQUESTER" && brief.requesterId === session.user.id);
-  if (!canUpload) return buildApiError("FORBIDDEN", "无权限", 403);
-
   const formData = await request.formData();
   const files = formData.getAll("files") as File[];
 

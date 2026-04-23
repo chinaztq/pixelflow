@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Masonry from "react-masonry-css";
-import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { Download } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -17,8 +15,6 @@ interface LibraryGridProps {
   initialImages: LibraryImage[];
   channels: string[];
 }
-
-const BREAKPOINTS = { default: 4, 1280: 3, 1024: 3, 768: 2, 640: 1 };
 
 export function LibraryGrid({ initialImages, channels }: LibraryGridProps) {
   const [filterChannel, setFilterChannel] = useState("");
@@ -49,15 +45,11 @@ export function LibraryGrid({ initialImages, channels }: LibraryGridProps) {
       {images.length === 0 ? (
         <EmptyState title="暂无素材" description="采用需求单版本后，图片将自动归入素材库" />
       ) : (
-        <Masonry
-          breakpointCols={BREAKPOINTS}
-          className="flex gap-2 -ml-2"
-          columnClassName="pl-2 bg-clip-padding"
-        >
+        <div className="flex flex-wrap gap-3">
           {images.map((img) => (
             <div
               key={img.id}
-              className="relative mb-2 rounded-[6px] overflow-hidden border group cursor-pointer"
+              className="relative w-[300px] rounded-[6px] overflow-hidden border group cursor-pointer"
               style={{ borderColor: "var(--border)" }}
               onMouseEnter={() => setHovered(img.id)}
               onMouseLeave={() => setHovered(null)}
@@ -66,8 +58,7 @@ export function LibraryGrid({ initialImages, channels }: LibraryGridProps) {
               <img
                 src={`/api/images/${img.thumbnailPath}`}
                 alt={img.originalName}
-                className="w-full block"
-                style={{ aspectRatio: `${img.width}/${img.height}` }}
+                className="w-[300px] h-auto block"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.background = "var(--hover-bg)";
                 }}
@@ -100,7 +91,7 @@ export function LibraryGrid({ initialImages, channels }: LibraryGridProps) {
               )}
             </div>
           ))}
-        </Masonry>
+        </div>
       )}
     </div>
   );

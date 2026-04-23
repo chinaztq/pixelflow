@@ -24,24 +24,14 @@ export default async function BriefsPage({
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page ?? "1"));
   const pageSize = 20;
-  const userId = session.user.id;
-  const role = session.user.role;
-
-  const roleFilter =
-    role === "ADMIN"
-      ? {}
-      : role === "REQUESTER"
-      ? { requesterId: userId }
-      : { OR: [{ assigneeId: userId }, { assigneeId: null, status: "PENDING" as BriefStatus }] };
 
   const where = {
-    ...roleFilter,
     ...(sp.status ? { status: sp.status as BriefStatus } : {}),
     ...(sp.channel ? { channel: sp.channel } : {}),
     ...(sp.priority ? { priority: sp.priority as Priority } : {}),
   };
 
-  const [total, briefs, designers] = await Promise.all([
+  const [total, briefs] = await Promise.all([
     prisma.brief.count({ where }),
     prisma.brief.findMany({
       where,
@@ -54,15 +44,7 @@ export default async function BriefsPage({
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
-    role === "ADMIN" || role === "REQUESTER"
-      ? prisma.user.findMany({
-          where: { role: "DESIGNER", active: true },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
   ]);
-
-  const canCreate = role === "REQUESTER" || role === "ADMIN";
 
   return (
     <div className="space-y-4">
@@ -70,7 +52,7 @@ export default async function BriefsPage({
         <h1 className="text-base font-medium" style={{ color: "var(--text)" }}>
           需求单
         </h1>
-        {canCreate && <NewBriefDialog />}
+        <NewBriefDialog />
       </div>
 
       <BriefTable
@@ -78,8 +60,6 @@ export default async function BriefsPage({
         total={total}
         page={page}
         pageSize={pageSize}
-        designers={designers}
-        role={role}
         currentFilters={{ status: sp.status, channel: sp.channel, priority: sp.priority }}
       />
     </div>

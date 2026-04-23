@@ -22,21 +22,7 @@ export async function GET(request: NextRequest) {
   const params = querySchema.parse(Object.fromEntries(searchParams));
   const { page, pageSize, ...filters } = params;
 
-  const userId = session.user.id;
-  const role = session.user.role;
-
-  // Build role-based base filter
-  const roleFilter =
-    role === "ADMIN"
-      ? {}
-      : role === "REQUESTER"
-      ? { requesterId: userId }
-      : {
-          OR: [{ assigneeId: userId }, { assigneeId: null, status: "PENDING" as const }],
-        };
-
   const where = {
-    ...roleFilter,
     ...(filters.status ? { status: filters.status as never } : {}),
     ...(filters.channel ? { channel: filters.channel } : {}),
     ...(filters.priority ? { priority: filters.priority as never } : {}),
@@ -82,7 +68,6 @@ const createSchema = z.object({
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return buildApiError("UNAUTHORIZED", "请先登录", 401);
-  if (session.user.role === "DESIGNER") return buildApiError("FORBIDDEN", "无权限", 403);
 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);

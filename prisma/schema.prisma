@@ -22,6 +22,7 @@ model User {
   versions        Version[]
   comments        Comment[]
   notifications   Notification[]
+  templates       Template[]
 }
 
 enum Role {
@@ -169,6 +170,31 @@ model ReferenceImage {
   originalName  String
 
   createdAt DateTime @default(now())
+}
+
+model Template {
+  id            String  @id @default(cuid())
+  title         String?
+  note          String?
+
+  filename      String
+  originalName  String
+  filePath      String
+  thumbnailPath String
+  previewPath   String
+
+  mimeType String
+  size     Int
+  width    Int
+  height   Int
+
+  uploaderId String
+  uploader   User   @relation(fields: [uploaderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([uploaderId])
 }
 
 model Notification {

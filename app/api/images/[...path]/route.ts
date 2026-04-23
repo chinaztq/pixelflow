@@ -33,6 +33,44 @@ export async function GET(
     actualPath = relativePath.replace("/original/", "/preview/").replace("/thumbnail/", "/preview/");
   }
 
+  // Check template images first (templates/{id}/...)
+  if (relativePath.startsWith("templates/")) {
+    const template = await prisma.template.findFirst({
+      where: {
+        OR: [
+          { filePath: actualPath },
+          { thumbnailPath: actualPath },
+          { previewPath: actualPath },
+          { filePath: relativePath },
+          { thumbnailPath: relativePath },
+          { previewPath: relativePath },
+        ],
+      },
+    });
+    if (!template) {
+      return NextResponse.json({ error: { code: "NOT_FOUND", message: "图片不存在" } }, { status: 404 });
+    }
+
+    const fileToServe = size === "thumb"
+      ? template.thumbnailPath
+      : size === "preview"
+      ? template.previewPath
+      : template.filePath;
+
+    const buf = await storage.get(fileToServe).catch(() => null);
+    if (!buf) return NextResponse.json({ error: { code: "NOT_FOUND", message: "文件不存在" } }, { status: 404 });
+
+    const ext = fileToServe.split(".").pop() ?? "jpg";
+    const mimeType = MIME_TYPES[ext] ?? "image/jpeg";
+
+    return new NextResponse(buf as unknown as BodyInit, {
+      headers: {
+        "Content-Type": mimeType,
+        "Cache-Control": "private, max-age=3600",
+      },
+    });
+  }
+
   // Verify image exists in DB and check permissions
   const image = await prisma.image.findFirst({
     where: {
@@ -62,16 +100,6 @@ export async function GET(
       return NextResponse.json({ error: { code: "NOT_FOUND", message: "图片不存在" } }, { status: 404 });
     }
 
-    // Permission check for reference
-    const brief = ref.brief;
-    const canView =
-      session.user.role === "ADMIN" ||
-      brief.requesterId === session.user.id ||
-      brief.assigneeId === session.user.id;
-    if (!canView) {
-      return NextResponse.json({ error: { code: "FORBIDDEN", message: "无权限" } }, { status: 403 });
-    }
-
     const buf = await storage.get(relativePath).catch(() => null);
     if (!buf) return NextResponse.json({ error: { code: "NOT_FOUND", message: "文件不存在" } }, { status: 404 });
 
@@ -83,16 +111,6 @@ export async function GET(
         "Cache-Control": "private, max-age=3600",
       },
     });
-  }
-
-  // Permission check
-  const brief = image.version.brief;
-  const canView =
-    session.user.role === "ADMIN" ||
-    brief.requesterId === session.user.id ||
-    brief.assigneeId === session.user.id;
-  if (!canView) {
-    return NextResponse.json({ error: { code: "FORBIDDEN", message: "无权限" } }, { status: 403 });
   }
 
   const fileToServe = size === "thumb"

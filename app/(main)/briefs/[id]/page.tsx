@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
-import { canViewBrief } from "@/lib/permissions";
 import { BriefDetail } from "./BriefDetail";
 import type { SessionUser } from "@/types";
 
@@ -34,14 +33,10 @@ export default async function BriefDetailPage({ params }: { params: Promise<{ id
   if (!brief) notFound();
 
   const sessionUser = session.user as SessionUser;
-  if (!canViewBrief(sessionUser, brief)) redirect("/briefs");
-
-  const designers = session.user.role !== "DESIGNER"
-    ? await prisma.user.findMany({
-        where: { role: "DESIGNER", active: true },
-        select: { id: true, name: true },
-      })
-    : [];
+  const designers = await prisma.user.findMany({
+    where: { active: true },
+    select: { id: true, name: true },
+  });
 
   return (
     <BriefDetail
